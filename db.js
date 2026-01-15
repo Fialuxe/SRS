@@ -28,7 +28,7 @@ const DB = {
     sheets: [
         { id: 'S001', name: 'メディア情報学', courses: ['C001', 'C002', 'C003', 'C004', 'C005', 'C006'] },
         { id: 'S002', name: '経営社会情報', courses: ['C001', 'C002', 'C003', 'C004', 'C005', 'C006', 'C007', 'C008'] },
-        { id: 'S003', name: '転類失敗(・w・)', courses: ['C001', 'C002', 'C003', 'C004', 'C005', 'C006', 'C007', 'C008'] }
+        { id: 'S003', name: '\' OR 1=1 -- ', courses: ['C001', 'C002', 'C003', 'C004', 'C005', 'C006', 'C007', 'C008'] }
     ],
     unitRequirements: {
         'メディア情報学プログラム': [
@@ -119,6 +119,45 @@ const DB = {
         // Default to user's program if not specified
         const p = program || this.user.program;
         return this.unitRequirements[p] || this.unitRequirements['メディア情報学プログラム'];
+    },
+    getCategoryColor(categoryName, program) {
+        const progress = this.getUnitProgress(program);
+        let color = 'var(--primary-color)'; // Default
+
+        const findColor = (items) => {
+            for (const item of items) {
+                if (item.category === categoryName) {
+                    return item.color;
+                }
+                if (item.children) {
+                    const childColor = findColor(item.children);
+                    if (childColor) return childColor; // Return specific child color if found? 
+                    // Actually, if the course has a specific child category, we want that.
+                    // But usually courses are assigned to a specific category.
+                    // If the course category matches a parent, use parent color.
+                    // If it matches a child, use child color (if defined) or inherit?
+                    // In my data, children don't always have colors defined, so we might need to inherit from parent.
+                }
+            }
+            return null;
+        };
+
+        // Improved search that returns parent color if child has no color
+        const findColorWithInheritance = (items, parentColor) => {
+            for (const item of items) {
+                const currentColor = item.color || parentColor;
+                if (item.category === categoryName) {
+                    return currentColor;
+                }
+                if (item.children) {
+                    const found = findColorWithInheritance(item.children, currentColor);
+                    if (found) return found;
+                }
+            }
+            return null;
+        };
+
+        return findColorWithInheritance(progress, null) || 'var(--primary-color)';
     },
     login(id, password) {
         return id === this.user.id && password === this.user.password;
