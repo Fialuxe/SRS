@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // --- Global Refs ---
     const navItems = document.querySelectorAll('.nav-item');
     const pageTitle = document.getElementById('page-title');
     const viewContainer = document.getElementById('view-container');
@@ -25,6 +26,71 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- UI Helpers ---
     const UI = {
+        showToast: (message, type = 'info') => {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            // Animation handled by CSS (see style.css updates)
+            requestAnimationFrame(() => toast.classList.add('show'));
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        },
+
+        showModal: (titleText, bodyContent, footerContent = '') => {
+            const modal = document.getElementById('modal-overlay');
+            const title = document.getElementById('modal-title');
+            const body = document.getElementById('modal-body');
+
+            title.textContent = titleText;
+            body.innerHTML = bodyContent;
+
+            // If footer provided, append it. For now, modal-body handles main content.
+            // Simplified: if bodyContent contains buttons, that's fine.
+            // Or we can inject footer div.
+            if (footerContent) {
+                const footer = document.createElement('div');
+                footer.className = 'modal-footer';
+                footer.innerHTML = footerContent;
+                body.appendChild(footer); // Append to body or separate container? 
+                // Currently modal-content has header and body. Footer fits in body or new div.
+                // Let's add it to body for simplicity with styling.
+            }
+
+            modal.classList.add('open');
+        },
+
+        closeModal: () => {
+            document.getElementById('modal-overlay').classList.remove('open');
+        },
+
+        // Loading Spinner
+        withLoading: async (fn) => {
+            let loader = document.getElementById('global-loader');
+            if (!loader) {
+                loader = document.createElement('div');
+                loader.id = 'global-loader';
+                loader.innerHTML = '<div class="spinner"></div>';
+                document.body.appendChild(loader);
+            }
+
+            loader.classList.add('visible');
+
+            // Artificial delay > 1s for "Processing" feel or SRS Requirement
+            // SRS says "if >3s, show spinner". We force spinner for demo.
+            await new Promise(r => setTimeout(r, 800));
+
+            try {
+                await fn();
+            } finally {
+                loader.classList.remove('visible');
+            }
+        },
+
         createGridHeader: (text) => {
             const div = document.createElement('div');
             div.className = 'grid-header';
@@ -50,9 +116,10 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
 
             if (showActions) {
+                // Check if has link (mock)
                 html += `
                     <div class="cell-actions">
-                        <span class="mini-icon" title="Syllabus">📄</span>
+                        <span class="mini-icon" title="Syllabus" style="cursor:pointer;" onclick="event.stopPropagation(); window.open('https://example.com', '_blank')">📄</span>
                         <span class="mini-icon active" title="Tasks">📝</span>
                     </div>
                 `;
@@ -60,7 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (showDelete) {
                 html += `
-                    <button class="icon-btn mini" style="position: absolute; top: 2px; right: 2px; width: 20px; height: 20px; font-size: 0.7rem; color: var(--danger); background: white;" onclick="removeCourse('${course.id}')">×</button>
+                    <button class="icon-btn mini" style="position: absolute; top: 2px; right: 2px; width: 20px; height: 20px; font-size: 0.7rem; color: var(--danger); background: white;" onclick="removeCourse('${course.id}'); event.stopPropagation();">×</button>
                 `;
             }
 
@@ -88,26 +155,88 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Login Logic
-    document.getElementById('btn-login').addEventListener('click', () => {
+    // --- State & Main Logic ---
+
+    // Auth Flow
+    document.getElementById('btn-login').addEventListener('click', async () => {
         const id = document.getElementById('login-id').value;
         const pass = document.getElementById('login-pass').value;
 
-        if (DB.login(id, pass)) {
-            loginView.style.opacity = '0';
-            setTimeout(() => {
-                loginView.style.display = 'none';
-                app.style.display = 'flex';
-                loadView(CONSTANTS.VIEWS.DASHBOARD);
-            }, 500);
-        } else {
-            document.getElementById('login-error').textContent = 'IDまたはパスワードが間違っています';
-        }
+        await UI.withLoading(async () => {
+            const res = DB.login(id, pass);
+            if (res.success) {
+                loginView.style.opacity = '0';
+
+                // Update User Profile UI
+                document.querySelector('.user-profile .name').textContent = DB.currentUser.name;
+                document.querySelector('.user-profile .id').textContent = DB.currentUser.id;
+
+                setTimeout(() => {
+                    loginView.style.display = 'none';
+                    app.style.display = 'flex';
+                    loadView(CONSTANTS.VIEWS.DASHBOARD);
+                }, 500);
+            } else {
+                document.getElementById('login-error').textContent = res.message;
+            }
+        });
     });
 
-    // Navigation Logic
+    // Toggle Registration Mode
+    // Quick Hack for Register Button Handling
+    document.getElementById('btn-toggle-mode').addEventListener('click', () => {
+        const formTitle = document.querySelector('.logo');
+        const loginBtn = document.getElementById('btn-login');
+        const regBtn = document.getElementById('btn-register');
+        const toggleBtn = document.getElementById('btn-toggle-mode');
+        const hint = document.getElementById('login-hint');
+
+        if (loginBtn.style.display !== 'none') {
+            loginBtn.style.display = 'none';
+            regBtn.style.display = 'block';
+            formTitle.textContent = '新規登録';
+            toggleBtn.textContent = 'ログインへ戻る';
+            hint.textContent = '初期パスワードを設定してください';
+        } else {
+            loginBtn.style.display = 'block';
+            regBtn.style.display = 'none';
+            formTitle.textContent = 'CampUsFlow';
+            toggleBtn.textContent = '新規登録はこちら';
+            hint.innerHTML = '学籍番号とパスワードを入力してください<br>※WORK IN PROGRESS..';
+        }
+        document.getElementById('login-error').textContent = '';
+    });
+
+    document.getElementById('btn-register').addEventListener('click', async () => {
+        const id = document.getElementById('login-id').value;
+        const pass = document.getElementById('login-pass').value;
+        const email = 'demo@example.com'; // Mock email input
+
+        await UI.withLoading(async () => {
+            const res = DB.registerUser(id, pass, email);
+            if (res.success) {
+                UI.showToast(res.message);
+                document.getElementById('btn-toggle-mode').click();
+                document.getElementById('login-error').textContent = '登録完了。メールを確認してください。(2秒後に自動有効化されます)';
+            } else {
+                document.getElementById('login-error').textContent = res.message;
+            }
+        });
+    });
+
+    // Logout
+    window.logout = () => {
+        // Simple logout
+        location.reload();
+    };
+
+    // Navigation
     navItems.forEach(item => {
         item.addEventListener('click', () => {
+            if (item.dataset.view === 'logout') {
+                window.logout();
+                return;
+            }
             navItems.forEach(nav => nav.classList.remove('active'));
             item.classList.add('active');
             loadView(item.dataset.view);
@@ -136,13 +265,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // --- Dashboard ---
     function renderDashboard(container) {
         container.innerHTML = `
             <div class="dashboard-layout">
                 <div class="glass-panel">
                     <div class="panel-header">
                         <div class="panel-title"><span class="icon">📅</span> 時間割</div>
-                        <button class="icon-btn mini">⚙️</button>
+                        <button class="icon-btn mini" onclick="UI.showToast('設定機能は未実装です')">⚙️</button>
                     </div>
                     <div id="timetable" class="timetable-grid"></div>
                 </div>
@@ -177,9 +307,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const container = document.getElementById('task-tree');
         const courses = DB.getMyCourses();
 
+        // If no courses, show empty
+        if (courses.length === 0) {
+            container.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding:2rem;">履歴登録された科目がありません</div>';
+            return;
+        }
+
+        let hasTasks = false;
         courses.forEach(course => {
             const tasks = DB.getTasksByCourse(course.id);
             if (tasks.length === 0) return;
+            hasTasks = true;
 
             const group = document.createElement('div');
             group.className = 'task-course-group';
@@ -187,7 +325,7 @@ document.addEventListener('DOMContentLoaded', () => {
             group.innerHTML = `
                 <div class="group-header">
                     ${course.name}
-                    <span class="badge">${tasks.filter(t => !t.completed).length}</span>
+                    <span class="badge" style="background:var(--primary-color); color:white; padding:2px 8px; border-radius:12px; font-size:0.75rem;">${tasks.filter(t => !t.completed).length}</span>
                 </div>
                 <div class="task-items">
                     ${tasks.map(task => `
@@ -210,6 +348,10 @@ document.addEventListener('DOMContentLoaded', () => {
             container.appendChild(group);
         });
 
+        if (!hasTasks) {
+            container.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding:2rem;">未完了の課題はありません</div>';
+        }
+
         // Event Listeners for Checkboxes
         container.querySelectorAll('.task-checkbox').forEach(cb => {
             cb.addEventListener('change', (e) => {
@@ -220,7 +362,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Update DB
                 DB.toggleTaskCompletion(taskId);
 
-                // Update UI locally to avoid full re-render (Layout Thrashing Fix)
+                // Update UI locally
                 if (isChecked) {
                     taskItem.classList.add('completed');
                 } else {
@@ -230,21 +372,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Update Badge
                 const group = taskItem.closest('.task-course-group');
                 const badge = group.querySelector('.badge');
-                const currentCount = parseInt(badge.textContent);
-                badge.textContent = isChecked ? currentCount - 1 : currentCount + 1;
+                if (badge) {
+                    // Recalculate badge
+                    // A bit lazy, but works for mock
+                    const tasksInGroup = DB.getTasksByCourse(DB.getTasks().find(t => t.id === taskId).courseId);
+                    badge.textContent = tasksInGroup.filter(t => !t.completed).length;
+                }
             });
         });
     }
 
+    // Modal Details (UC-02-01)
     function showCourseDetails(course) {
-        const modal = document.getElementById('modal-overlay');
-        const title = document.getElementById('modal-title');
-        const body = document.getElementById('modal-body');
-
         const isNotifyOn = localStorage.getItem(`notify_${course.id}`) === 'true';
 
-        title.textContent = course.name;
-        body.innerHTML = `
+        const body = `
             <div style="margin-bottom: 1rem;">
                 <div style="font-size: 0.9rem; color: var(--text-muted);">教員</div>
                 <div style="font-weight: 600;">${course.teacher}</div>
@@ -256,8 +398,8 @@ document.addEventListener('DOMContentLoaded', () => {
             <div style="margin-bottom: 1.5rem;">
                 <div style="font-size: 0.9rem; color: var(--text-muted);">リンク</div>
                 <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
-                    <a href="#" class="btn btn-primary" style="text-decoration: none; font-size: 0.9rem;">シラバス</a>
-                    <a href="#" class="btn" style="background: var(--bg-color); text-decoration: none; font-size: 0.9rem;">課題提出箱</a>
+                    <a href="https://example.com" target="_blank" class="btn btn-primary" style="text-decoration: none; font-size: 0.9rem;">シラバス</a>
+                    <a href="https://example.com" target="_blank" class="btn" style="background: var(--bg-color); text-decoration: none; font-size: 0.9rem;">課題提出箱</a>
                 </div>
             </div>
             <div style="padding-top: 1rem; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
@@ -265,7 +407,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <label class="switch" style="position: relative; display: inline-block; width: 40px; height: 24px;">
                     <input type="checkbox" ${isNotifyOn ? 'checked' : ''} onchange="toggleNotify('${course.id}', null, this.checked)">
                     <span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px;"></span>
-                    <style>
+                     <style>
                         .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
                         input:checked + .slider { background-color: var(--primary-color); }
                         input:checked + .slider:before { transform: translateX(16px); }
@@ -274,33 +416,31 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
 
-        modal.classList.add('open');
+        UI.showModal(course.name, body, `<button class="btn" onclick="UI.closeModal()">閉じる</button>`);
     }
 
-    window.closeModal = () => {
-        document.getElementById('modal-overlay').classList.remove('open');
-    };
+    window.closeModal = UI.closeModal;
 
-    window.toggleNotify = (courseId, iconEl, forceState) => {
-        const key = `notify_${courseId}`;
+    window.toggleNotify = (keySuffix, iconEl, forceState) => {
+        const key = keySuffix.startsWith('notify_') ? keySuffix : `notify_${keySuffix}`;
         let newState;
-
         if (forceState !== undefined) {
             newState = forceState;
         } else {
             const current = localStorage.getItem(key) === 'true';
             newState = !current;
         }
-
         localStorage.setItem(key, newState);
-
-        // Update Icon if passed
         if (iconEl) {
             if (newState) iconEl.classList.add('active');
             else iconEl.classList.remove('active');
         }
+        if (!iconEl && forceState !== undefined) {
+            UI.showToast(`通知を${newState ? 'ON' : 'OFF'}にしました`);
+        }
     };
 
+    // --- Registration (UC-03) ---
     function renderRegistration(container) {
         container.innerHTML = `
             <div class="dashboard-layout">
@@ -395,22 +535,41 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Expose functions to global scope for inline onclick handlers (simplified approach)
-    window.addCourse = (id) => {
-        DB.registerCourse(id);
-        renderCurrentRegistration();
-        // Also refresh search results to update state if needed (optional)
+    // Exposed handlers
+    window.addCourse = async (id) => {
+        const res = DB.registerCourse(id);
+        if (res.success) {
+            UI.showToast(res.message);
+            renderCurrentRegistration();
+        } else {
+            UI.showModal('登録エラー', `<p style="color:var(--danger)">${res.message}</p>`, '<button class="btn" onclick="UI.closeModal()">確認</button>');
+        }
     };
 
     window.removeCourse = (id) => {
+        UI.showModal(
+            '確認',
+            '本当にこの科目を削除しますか？',
+            `
+            <button class="btn" style="background:transparent; color:var(--text-muted);" onclick="UI.closeModal()">キャンセル</button>
+            <button class="btn btn-primary" style="background:var(--danger);" onclick="confirmRemoveCourse('${id}')">削除する</button>
+            `
+        );
+    };
+
+    window.confirmRemoveCourse = (id) => {
         DB.removeCourse(id);
+        UI.closeModal();
+        UI.showToast('削除しました', 'info');
         renderCurrentRegistration();
     };
 
+    // --- Simulation (UC-04) ---
     function renderSimulation(container) {
         const sheets = DB.getSheets();
-        const activeSheetId = container.dataset.activeSheet || sheets[0].id;
-        const activeSheet = sheets.find(s => s.id === activeSheetId);
+        const activeSheetId = container.dataset.activeSheet || (sheets[0] ? sheets[0].id : null);
+
+        const activeSheet = sheets.find(s => s.id === activeSheetId) || sheets[0];
 
         container.innerHTML = `
             <div class="dashboard-layout" style="grid-template-columns: 2fr 1fr; gap: 1.5rem;">
@@ -420,6 +579,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="panel-title"><span class="icon">🔮</span> 履修シミュレーション</div>
                         <div style="display:flex; gap:0.5rem;">
                              <button class="btn btn-primary" onclick="createNewSheet()">＋ 新規</button>
+                             <button class="btn" style="background:var(--success); color:white;" onclick="reflectToReal('${activeSheet.id}')">本登録へ反映</button>
                         </div>
                     </div>
                     
@@ -438,7 +598,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
 
-        renderSheetTabs(document.getElementById('sim-sheet-tabs'), sheets, activeSheetId);
+        renderSheetTabs(document.getElementById('sim-sheet-tabs'), sheets, activeSheet.id);
         renderSimulationControls(document.getElementById('sim-controls'), container);
         renderSimulationGrid(activeSheet);
         renderSimulationUnitStatus(activeSheet);
@@ -459,9 +619,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const semesters = ['1学期', '2学期', '3学期'];
         const currentSemester = parseInt(viewContainer.dataset.semesterIndex || 0);
 
+        const currentProgram = DB.currentUser.program;
+
         container.innerHTML = `
             <select onchange="updateProgram(this)" style="padding: 0.5rem; border-radius: var(--radius-md); border: 1px solid var(--glass-border);">
-                ${programs.map(p => `<option ${p === DB.user.program ? 'selected' : ''}>${p}</option>`).join('')}
+                ${programs.map(p => `<option ${p === currentProgram ? 'selected' : ''}>${p}</option>`).join('')}
             </select>
              <div style="display:flex; gap:0.25rem; background:rgba(255,255,255,0.5); padding:0.25rem; border-radius:var(--radius-md);">
                 ${semesters.map((s, i) => `
@@ -480,13 +642,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderSimulationGrid(sheet) {
         const grid = document.getElementById('sim-grid');
-
-        // Get current semester index from container dataset (default to 0: 1学期)
         const semesterIndex = parseInt(document.getElementById('view-container').dataset.semesterIndex || 0);
         const semesterName = ['1学期', '2学期', '3学期'][semesterIndex];
 
         UI.renderGrid(grid, (day, period, cell) => {
-            // Find course in this sheet AND semester
             const courseId = sheet.courses.find(id => {
                 const c = DB.getCourse(id);
                 return c && c.day === day && c.period === period && c.semester === semesterName;
@@ -495,10 +654,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (courseId) {
                 const course = DB.getCourse(courseId);
                 const card = UI.createCourseCard(course, { useColor: true });
-
-                // Add click handler for removal
                 card.onclick = () => {
-                    if (confirm(`「${course.name}」をシミュレーションから削除しますか？`)) {
+                    // Confirm Remove
+                    if (confirm('削除しますか？')) {
                         const newCourses = sheet.courses.filter(id => id !== courseId);
                         DB.updateSheet(sheet.id, newCourses);
                         renderSimulation(document.getElementById('view-container'));
@@ -506,37 +664,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
                 return card;
             } else {
-                // Empty slot interaction
+                // Add Course Logic
                 cell.style.opacity = '0.5';
                 cell.innerHTML = '<span style="font-size: 1.5rem; color: var(--text-light); opacity: 0; transition: opacity 0.2s;">+</span>';
                 cell.onmouseenter = () => cell.querySelector('span').style.opacity = '1';
                 cell.onmouseleave = () => cell.querySelector('span').style.opacity = '0';
 
                 cell.onclick = () => {
-                    const input = prompt('追加する科目IDまたは名前の一部を入力してください\n(デモ用ID: C001~C008)');
+                    const input = prompt('科目IDを入力 (C001, C009等)');
                     if (input) {
-                        // Simple search logic
-                        const allCourses = DB.courses; // Direct access for prototype
-                        const target = allCourses.find(c =>
-                            (c.id === input || c.name.includes(input)) &&
-                            c.day === day &&
-                            c.period === period
-                        );
-
-                        if (target) {
-                            if (sheet.courses.includes(target.id)) {
-                                alert('既に登録されています');
-                            } else {
-                                const newCourses = [...sheet.courses, target.id];
-                                DB.updateSheet(sheet.id, newCourses);
-                                renderSimulation(document.getElementById('view-container'));
-                            }
+                        const c = DB.getCourse(input);
+                        if (c && c.day === day && c.period === period) {
+                            if (sheet.courses.includes(c.id)) return;
+                            const newCourses = [...sheet.courses, c.id];
+                            DB.updateSheet(sheet.id, newCourses);
+                            renderSimulation(document.getElementById('view-container'));
                         } else {
-                            alert('該当する曜時限の科目が見つかりません');
+                            alert('科目が見つからないか、曜日時限が一致しません');
                         }
                     }
                 };
-                return null; // Content already set in cell
+                return null;
             }
         });
     }
@@ -548,11 +696,36 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.createNewSheet = () => {
-        const name = prompt('シート名を入力してください', '新しいプラン');
+        const name = prompt('シート名');
         if (name) {
             const newSheet = DB.createSheet(name);
             switchSheet(newSheet.id);
         }
+    };
+
+    // Reflect Logic
+    window.reflectToReal = async (sheetId) => {
+        await UI.withLoading(async () => {
+            const res = DB.reflectSheetToReal(sheetId);
+            if (res.success) {
+                const added = res.results.success.length;
+                const errors = res.results.errors;
+
+                let msg = `<p>登録成功: ${added}件</p>`;
+                if (errors.length > 0) {
+                    msg += `<div style="margin-top:1rem; border:1px solid var(--danger); background:rgba(255,0,0,0.05); padding:0.5rem; border-radius:var(--radius-sm);">
+                        <div style="font-weight:bold; color:var(--danger); margin-bottom:0.5rem;">登録できなかった科目</div>
+                        <ul style="padding-left:1.5rem; font-size:0.9rem;">
+                            ${errors.map(e => `<li>${e.course.name}: ${e.reason}</li>`).join('')}
+                        </ul>
+                    </div>`;
+                } else {
+                    msg += `<p style="color:var(--success);">すべての科目が正常に登録されました。</p>`;
+                }
+
+                UI.showModal('反映結果', msg, '<button class="btn" onclick="UI.closeModal()">閉じる</button>');
+            }
+        });
     };
 
     function renderUnitStatus(container) {
@@ -617,9 +790,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderSimulationUnitStatus(sheet) {
         const container = document.getElementById('sim-unit-status');
-        const progress = DB.getUnitProgress(); // Uses DB.user.program implicitly
+        const progress = DB.getUnitProgress();
 
-        // Calculate simulated additions
         const simCourses = sheet.courses.map(id => DB.getCourse(id)).filter(Boolean);
         const simProgress = {};
 
@@ -676,14 +848,13 @@ document.addEventListener('DOMContentLoaded', () => {
         return html;
     }
 
-    // Program Change Logic
+    // Program/Semester switch helpers
     window.updateProgram = (select) => {
-        DB.user.program = select.value;
+        DB.currentUser.program = select.value;
         const container = document.getElementById('view-container');
         renderSimulation(container);
     };
 
-    // Semester Change Logic
     window.switchSemester = (index) => {
         const container = document.getElementById('view-container');
         container.dataset.semesterIndex = index;
@@ -707,4 +878,5 @@ document.addEventListener('DOMContentLoaded', () => {
         const activeSheet = sheets.find(s => s.id === activeSheetId);
         renderSimulationGrid(activeSheet);
     };
+
 });

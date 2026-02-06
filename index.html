@@ -20,8 +20,8 @@
         style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%); z-index: 1000; display: flex; align-items: center; justify-content: center;">
         <div class="glass-panel" style="width: 400px; padding: 3rem; text-align: center;">
             <div class="logo" style="margin-bottom: 2rem; font-size: 2.5rem;">CampUsFlow</div>
-            <div style="margin-bottom: 2rem; color: var(--text-muted);">学籍番号とパスワードを入力してください<br>※WORK IN PROGRESS..
-                <br>※一部の機能は未実装・仕様と異なります。
+            <div id="login-hint" style="margin-bottom: 2rem; color: var(--text-muted);">
+                学籍番号とパスワードを入力してください<br>※WORK IN PROGRESS..
             </div>
 
             <div style="margin-bottom: 1.5rem; text-align: left;">
@@ -38,6 +38,14 @@
 
             <button id="btn-login" class="btn btn-primary"
                 style="width: 100%; padding: 1rem; font-size: 1.1rem;">ログイン</button>
+            <button id="btn-register" class="btn btn-primary"
+                style="width: 100%; padding: 1rem; font-size: 1.1rem; display: none;">登録してメールを送信</button>
+
+            <div style="margin-top: 1rem;">
+                <button id="btn-toggle-mode"
+                    style="background: none; border: none; color: var(--primary-color); cursor: pointer; text-decoration: underline;">新規登録はこちら</button>
+            </div>
+
             <div id="login-error" style="color: var(--danger); margin-top: 1rem; min-height: 1.5rem;"></div>
         </div>
     </div>
@@ -70,6 +78,9 @@
                 </li>
                 <li class="nav-item" data-view="unit-status">
                     <span class="icon">📊</span> 単位状況
+                </li>
+                <li class="nav-item" data-view="logout" style="margin-top: auto; color: var(--danger);">
+                    <span class="icon">🚪</span> ログアウト
                 </li>
             </ul>
             <div class="user-profile">
