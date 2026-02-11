@@ -1,0 +1,251 @@
+/* Global Reset & Variables */
+:root {
+    --primary-color: #0052cc;
+    --secondary-color: #172b4d;
+    --success-color: #36b37e;
+    --warning-color: #ffab00;
+    --danger-color: #ff5630;
+    --bg-color: #f4f5f7;
+    --surface-color: #ffffff;
+    --text-color: #172b4d;
+
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+
+    --border-radius: 4px;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+    --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: var(--font-family);
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    line-height: 1.5;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Utility to hide views */
+.hidden {
+    display: none !important;
+}
+
+h1,
+h2,
+h3 {
+    margin-bottom: var(--spacing-sm);
+}
+
+button {
+    cursor: pointer;
+    border: none;
+    border-radius: var(--border-radius);
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #0043a6;
+}
+
+.btn-secondary {
+    background-color: #dfe1e6;
+    color: #42526e;
+}
+
+/* Layout Containers */
+.view-container {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.app-header,
+.admin-header {
+    background-color: var(--surface-color);
+    padding: var(--spacing-md);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 60px;
+    z-index: 10;
+}
+
+.logo {
+    font-weight: bold;
+    font-size: 1.2rem;
+    color: var(--primary-color);
+}
+
+/* STUDENT PORTAL LAYOUT (2-Pane) */
+.portal-body {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+.side-nav {
+    width: 250px;
+    background-color: var(--secondary-color);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    padding: var(--spacing-md);
+    gap: var(--spacing-sm);
+}
+
+.nav-item {
+    background: transparent;
+    color: #deebff;
+    text-align: left;
+    padding: 12px;
+    border-radius: 4px;
+    width: 100%;
+}
+
+.nav-item:hover,
+.nav-item.active {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.content-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--spacing-md);
+    background-color: var(--bg-color);
+    display: flex;
+    flex-direction: column;
+}
+
+.sub-view {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Dashboard Split (Calendar Left, Tasks Right) */
+.dashboard-split {
+    display: flex;
+    gap: var(--spacing-md);
+    height: 100%;
+}
+
+.timetable-panel {
+    flex: 2;
+    /* 66% width approx */
+    background-color: var(--surface-color);
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    overflow-y: auto;
+}
+
+.task-panel {
+    flex: 1;
+    /* 33% width approx */
+    background-color: var(--surface-color);
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    overflow-y: auto;
+}
+
+/* Simulation View */
+.sim-header {
+    display: flex;
+    gap: var(--spacing-md);
+    align-items: center;
+    margin-bottom: var(--spacing-md);
+}
+
+.sim-tabs {
+    display: flex;
+    gap: 4px;
+}
+
+.sim-tab {
+    padding: 8px 16px;
+    background: #dfe1e6;
+    border-radius: 4px 4px 0 0;
+    cursor: pointer;
+}
+
+.sim-tab.active {
+    background: var(--primary-color);
+    color: white;
+}
+
+.sim-body {
+    display: flex;
+    gap: var(--spacing-md);
+    flex: 1;
+}
+
+.sim-calendar-panel {
+    flex: 2;
+    background: white;
+    padding: var(--spacing-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.sim-controls {
+    flex: 1;
+    background: white;
+    padding: var(--spacing-md);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Admin Layout (Legacy) */
+.admin-layout {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+    /* Prevent body scroll */
+    padding: var(--spacing-md);
+    gap: var(--spacing-md);
+}
+
+/* Grid */
+.timetable-grid {
+    display: grid;
+    grid-template-columns: 50px repeat(6, 1fr);
+    grid-template-rows: 50px repeat(7, 1fr);
+    gap: 4px;
+    height: 100%;
+    min-height: 500px;
+}
+
+/* Forms */
+input[type="text"],
+input[type="password"],
+input[type="file"],
+select {
+    width: 100%;
+    padding: var(--spacing-sm);
+    border: 1px solid #dfe1e6;
+    border-radius: var(--border-radius);
+    margin-bottom: var(--spacing-md);
+}

@@ -5,107 +5,227 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CampUsFlow</title>
-    <link rel="stylesheet" href="style.css">
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap"
-        rel="stylesheet">
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/components.css">
 </head>
 
 <body>
-    <!-- Login View -->
-    <div id="login-view"
-        style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%); z-index: 1000; display: flex; align-items: center; justify-content: center;">
-        <div class="glass-panel" style="width: 400px; padding: 3rem; text-align: center;">
-            <div class="logo" style="margin-bottom: 2rem; font-size: 2.5rem;">CampUsFlow</div>
-            <div id="login-hint" style="margin-bottom: 2rem; color: var(--text-muted);">
-                学籍番号とパスワードを入力してください<br>※WORK IN PROGRESS..
-            </div>
 
-            <div style="margin-bottom: 1.5rem; text-align: left;">
-                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">学籍番号</label>
-                <input type="text" id="login-id" value="2410000"
-                    style="width: 100%; padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--glass-border); background: rgba(255,255,255,0.5); font-size: 1rem;">
-            </div>
-
-            <div style="margin-bottom: 2.5rem; text-align: left;">
-                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">パスワード</label>
-                <input type="password" id="login-pass" value="password123"
-                    style="width: 100%; padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--glass-border); background: rgba(255,255,255,0.5); font-size: 1rem;">
-            </div>
-
-            <button id="btn-login" class="btn btn-primary"
-                style="width: 100%; padding: 1rem; font-size: 1.1rem;">ログイン</button>
-            <button id="btn-register" class="btn btn-primary"
-                style="width: 100%; padding: 1rem; font-size: 1.1rem; display: none;">登録してメールを送信</button>
-
-            <div style="margin-top: 1rem;">
-                <button id="btn-toggle-mode"
-                    style="background: none; border: none; color: var(--primary-color); cursor: pointer; text-decoration: underline;">新規登録はこちら</button>
-            </div>
-
-            <div id="login-error" style="color: var(--danger); margin-top: 1rem; min-height: 1.5rem;"></div>
+    <!-- ==================== VIEW: LOGIN ==================== -->
+    <div id="view-login" class="view-container">
+        <div class="login-card">
+            <h1>CampUsFlow</h1>
+            <p>Unified Learning Support System</p>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="input-id">Student ID</label>
+                    <input type="text" id="input-id" placeholder="u1234567" pattern="^[a-zA-Z][0-9]{7}$|admin" required>
+                </div>
+                <div class="form-group">
+                    <label for="input-password">Password</label>
+                    <input type="password" id="input-password" required minlength="8">
+                </div>
+                <button type="submit" class="btn-primary">Login</button>
+            </form>
         </div>
     </div>
 
-    <div id="app" style="display: none;">
-        <!-- Modal Overlay -->
-        <div id="modal-overlay" class="modal-overlay">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <div class="modal-title" id="modal-title">Course Name</div>
-                    <button class="close-btn" onclick="closeModal()">×</button>
-                </div>
-                <div id="modal-body">
-                    <!-- Dynamic Content -->
-                </div>
-            </div>
-        </div>
-
-        <nav class="sidebar">
+    <!-- ==================== STUDENT PORTAL LAYOUT ==================== -->
+    <div id="student-portal" class="view-container hidden">
+        <header class="app-header">
             <div class="logo">CampUsFlow</div>
-            <ul class="nav-links">
-                <li class="nav-item active" data-view="dashboard">
-                    <span class="icon">📅</span> 時間割
-                </li>
-                <li class="nav-item" data-view="registration">
-                    <span class="icon">📝</span> 履修登録
-                </li>
-                <li class="nav-item" data-view="simulation">
-                    <span class="icon">🔮</span> シミュレーション
-                </li>
-                <li class="nav-item" data-view="unit-status">
-                    <span class="icon">📊</span> 単位状況
-                </li>
-                <li class="nav-item" data-view="logout" style="margin-top: auto; color: var(--danger);">
-                    <span class="icon">🚪</span> ログアウト
-                </li>
-            </ul>
-            <div class="user-profile">
-                <div class="avatar">S</div>
-                <div class="info">
-                    <span class="name">Student</span>
-                    <span class="id">2410000</span>
-                </div>
+            <div class="user-info">
+                <span id="header-user-id">u1234567</span>
+                <button class="btn-secondary" onclick="window.app.logout()">Logout</button>
             </div>
-        </nav>
-        <main class="content-area">
-            <header class="top-bar">
-                <h1 id="page-title">時間割</h1>
-                <div class="actions">
-                    <button class="icon-btn">🔔</button>
-                    <button class="icon-btn">⚙️</button>
+        </header>
+
+        <div class="portal-body">
+            <!-- Left Pane: Navigation -->
+            <nav class="side-nav">
+                <button onclick="window.app.navigate('dashboard')" class="nav-item">TimeTable</button>
+                <button onclick="window.app.navigate('registration')" class="nav-item">Registration</button>
+                <button onclick="window.app.navigate('simulation')" class="nav-item">Simulation (UC-04)</button>
+                <button onclick="window.app.navigate('creditStatus')" class="nav-item">Credit Status</button>
+            </nav>
+
+            <!-- Right Pane: Content Area (Views injected here visually) -->
+            <main class="content-area">
+
+                <!-- 1. DASHBOARD View -->
+                <div id="view-dashboard" class="sub-view">
+                    <div class="dashboard-split">
+                        <!-- Calendar (Left) -->
+                        <section class="timetable-panel">
+                            <h2>TimeTable</h2>
+                            <div class="timetable-grid" id="timetable-grid"></div>
+                        </section>
+                        <!-- Tasks (Right) -->
+                        <aside class="task-panel">
+                            <h2>Tasks</h2>
+                            <div id="task-tree-container"></div>
+                        </aside>
+                    </div>
                 </div>
-            </header>
-            <div id="view-container">
-                <!-- Views will be injected here -->
+
+                <!-- 2. REGISTRATION View -->
+                <div id="view-registration" class="sub-view hidden">
+                    <div class="registration-split">
+                        <div class="reg-left-pane">
+                            <!-- Search Panel -->
+                            <section class="search-panel">
+                                <h3>Search Courses</h3>
+                                <input type="text" placeholder="Keyword">
+                                <button class="btn-secondary">Search</button>
+                                <div id="search-results"></div>
+                            </section>
+
+                            <!-- History Panel (New) -->
+                            <section class="history-panel" style="margin-top: 20px;">
+                                <h3>Academic History</h3>
+                                <div id="history-list"></div>
+                            </section>
+                        </div>
+
+                        <!-- Draft Calendar -->
+                        <section class="draft-panel reg-right-pane">
+                            <h3>Current Selection</h3>
+                            <div id="draft-calendar"></div>
+                            <button class="btn-primary">Commit Registration</button>
+                        </section>
+                    </div>
+                </div>
+
+                <!-- 3. SIMULATION View -->
+                <div id="view-simulation" class="sub-view hidden">
+                    <div class="sim-header">
+                        <div class="sim-controls-top">
+                            <h2>Course Simulation (UC-04)</h2>
+                            <div class="sim-selectors">
+                                <select id="sim-semester-select">
+                                    <option value="1">Semester 1</option>
+                                    <option value="2">Semester 2</option>
+                                    <option value="3">Semester 3</option>
+                                    <option value="4">Semester 4</option>
+                                    <option value="5">Semester 5</option>
+                                    <option value="6">Semester 6</option>
+                                    <option value="7">Semester 7</option>
+                                    <option value="8">Semester 8</option>
+                                </select>
+                                <select id="sim-program-select">
+                                    <option value="ICE">Information & Comm. Eng.</option>
+                                    <option value="ME">Mechanical Engineering</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="sim-tabs-row">
+                            <div class="sim-tabs" id="sim-tabs"></div>
+                            <button class="btn-secondary" id="btn-new-sheet">+ New Sheet</button>
+                        </div>
+                    </div>
+
+                    <div class="sim-body">
+                        <div class="sim-calendar-panel">
+                            <h3>Plan: <span id="current-sheet-name">None</span></h3>
+                            <p style="font-size:0.9em; color:#666;">Click a cell to find courses for that slot.</p>
+                            <div class="timetable-grid" id="sim-grid"></div>
+                        </div>
+                        <div class="sim-controls">
+                            <!-- Credit Status Panel -->
+                            <div class="sim-credit-status-panel">
+                                <h3>Credit Status (Est.)</h3>
+                                <div id="sim-credit-list" class="sim-credit-list">
+                                    <!-- Populated by JS -->
+                                </div>
+                            </div>
+
+                            <hr>
+
+                            <h3>Course Search</h3>
+                            <div class="sim-search-box">
+                                <input type="text" id="sim-search-input" placeholder="Keyword or Click Cell...">
+                                <button class="btn-secondary" id="btn-sim-search">Search</button>
+                            </div>
+                            <div id="sim-search-results" class="scrollable-list"></div>
+
+                            <hr>
+                            <h3>Validation</h3>
+                            <div id="sim-validation-status">Valid</div>
+                            <br>
+                            <button class="btn-primary" id="btn-reflect-real">Reflect to Official Registration</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. CREDIT STATUS View -->
+                <div id="view-credit-status" class="sub-view hidden">
+                    <h2>Credit Status / Graduation Requirements</h2>
+                    <table id="credit-table">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Required</th>
+                                <th>Earned</th>
+                                <th>Registered</th>
+                                <th>Deficit</th>
+                            </tr>
+                        </thead>
+                        <tbody id="credit-table-body"></tbody>
+                    </table>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- ==================== VIEW: ADMIN (Unchanged Layout) ==================== -->
+    <div id="view-admin-user" class="view-container hidden">
+        <header class="admin-header">
+            <div class="logo">CampUsFlow Admin</div>
+            <nav>
+                <button onclick="window.app.navigate('adminSystem')">System Monitor</button>
+                <button onclick="window.app.logout()">Logout</button>
+            </nav>
+        </header>
+        <main class="admin-layout">
+            <h2>User Management</h2>
+            <div class="upload-section">
+                <h3>Bulk Upload (CSV)</h3>
+                <input type="file" accept=".csv">
+                <button class="btn-primary">Upload</button>
+            </div>
+            <div class="user-list-section">
+                <h3>Users</h3>
+                <table id="user-list-table"></table>
             </div>
         </main>
     </div>
-    <script src="db.js"></script>
-    <script src="main.js"></script>
+
+    <!-- Admin System Monitor -->
+    <div id="view-admin-system" class="view-container hidden">
+        <header class="admin-header">
+            <div class="logo">CampUsFlow Admin</div>
+            <nav>
+                <button onclick="window.app.navigate('adminUser')">User Management</button>
+                <button onclick="window.app.logout()">Logout</button>
+            </nav>
+        </header>
+        <main class="admin-layout">
+            <h2>System Monitor</h2>
+            <div class="status-cards">
+                <div class="card" id="status-syllabus">Syllabus Sync: Checking...</div>
+                <div class="card" id="status-lms">LMS Sync: Checking...</div>
+            </div>
+            <h3>Error Logs</h3>
+            <ul id="error-log-list"></ul>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="modal-overlay" class="hidden"></div>
+    <div id="course-detail-modal" class="modal hidden"></div>
+
+    <script type="module" src="scripts/main.js"></script>
 </body>
 
 </html>

@@ -1,0 +1,288 @@
+/* Login View */
+.login-card {
+    width: 100%;
+    max-width: 400px;
+    margin: auto;
+    background: var(--surface-color);
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-md);
+    text-align: center;
+}
+
+.login-links {
+    margin-top: var(--spacing-md);
+    font-size: 0.9em;
+    display: flex;
+    justify-content: space-between;
+}
+
+/* Timetable Components */
+.grid-header {
+    background-color: #ebecf0;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--border-radius);
+}
+
+.grid-cell {
+    background-color: #f4f5f7;
+    border: 1px solid #dfe1e6;
+    border-radius: var(--border-radius);
+    padding: var(--spacing-xs);
+    font-size: 0.9em;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.grid-cell:hover {
+    background-color: #ebecf0;
+}
+
+.grid-cell.filled {
+    background-color: #deebff;
+    /* Light blue for courses */
+    border-color: #b3d4ff;
+}
+
+.cell-icons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 4px;
+}
+
+.icon {
+    font-size: 14px;
+}
+
+/* Task Tree */
+.task-group {
+    margin-bottom: var(--spacing-md);
+}
+
+.task-group-title {
+    font-weight: bold;
+    padding: var(--spacing-xs) 0;
+    border-bottom: 1px solid #dfe1e6;
+}
+
+.task-item {
+    display: flex;
+    align-items: center;
+    padding: var(--spacing-xs) 0;
+    font-size: 0.9rem;
+}
+
+.task-item.completed span {
+    text-decoration: line-through;
+    color: #6b778c;
+}
+
+.task-meta {
+    font-size: 0.8em;
+    color: #6b778c;
+    margin-left: auto;
+}
+
+/* Admin/System Monitor */
+.status-cards {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.card {
+    background: white;
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    flex: 1;
+}
+
+#user-list-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+}
+
+#user-list-table th,
+#user-list-table td {
+    padding: var(--spacing-sm);
+    border-bottom: 1px solid #dfe1e6;
+    text-align: left;
+}
+
+.status-active {
+    color: var(--success-color);
+}
+
+.status-locked {
+    color: var(--danger-color);
+    font-weight: bold;
+}
+
+/* Credit Status Table */
+#credit-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    box-shadow: var(--shadow-sm);
+}
+
+#credit-table th,
+#credit-table td {
+    padding: var(--spacing-md);
+    border-bottom: 1px solid #dfe1e6;
+    text-align: left;
+}
+
+#credit-table th {
+    background-color: #ebecf0;
+}
+
+/* Modal */
+.modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-md);
+    z-index: 1000;
+    width: 90%;
+    max-width: 500px;
+}
+
+#modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+}
+
+/* Registration Split Layout */
+.registration-split {
+    display: flex;
+    gap: var(--spacing-md);
+    height: 100%;
+}
+
+.reg-left-pane {
+    flex: 2;
+    background: var(--surface-color);
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius);
+    overflow-y: auto;
+}
+
+.reg-right-pane {
+    flex: 1;
+    background: var(--surface-color);
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius);
+    overflow-y: auto;
+}
+
+/* History List */
+.history-item {
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+}
+
+/* Simulation Updates */
+.sim-header {
+    display: flex;
+    flex-direction: column;
+    /* Stack top controls and tabs */
+    gap: var(--spacing-sm);
+}
+
+.sim-controls-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.sim-selectors select {
+    width: auto;
+    margin-bottom: 0;
+    margin-left: 10px;
+    padding: 4px;
+}
+
+.sim-tabs-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.scrollable-list {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #eee;
+    margin-top: 10px;
+}
+
+.sim-course-item {
+    padding: 6px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    font-size: 0.9em;
+}
+
+.sim-course-item:hover {
+    background-color: #f0f0f0;
+}
+
+
+/* Simulation Credit Status */
+.sim-credit-status-panel {
+    margin-bottom: 20px;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+}
+
+.sim-credit-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.sim-credit-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9em;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+}
+
+.sim-credit-item.ok {
+    border-left: 4px solid var(--success-color);
+    color: var(--text-color);
+}
+
+.sim-credit-item.deficit {
+    border-left: 4px solid var(--error-color);
+    background-color: #fff0f0;
+    color: var(--error-color);
+    font-weight: bold;
+}
